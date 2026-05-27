@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     avatar_url      VARCHAR(500),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    -- email único por tenant (o global para superadmin donde tenant_id es NULL)
-    CONSTRAINT uq_usuario_email_tenant UNIQUE (email, tenant_id)
+    -- email único por tenant. NULLS NOT DISTINCT: dos NULL se consideran iguales
+    CONSTRAINT uq_usuario_email_tenant UNIQUE NULLS NOT DISTINCT (email, tenant_id)
 );
 
 CREATE INDEX idx_usuarios_tenant    ON usuarios(tenant_id);

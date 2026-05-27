@@ -10,7 +10,8 @@
     "migrate": "node database/migrate.js",
     "seed": "node database/seed.js",
     "migrate:seed": "node database/migrate.js && node database/seed.js",
-    "setup": "node database/create_db.js && node database/migrate.js && node database/seed.js"
+    "setup": "node database/create_db.js && node database/migrate.js && node database/seed.js",
+    "superadmin:reset": "node database/reset_superadmin.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InventarioIT</title>
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <!-- App CSS -->
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+<nav id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+    <div class="brand-text">
+      <span class="brand-name">InventarioIT</span>
+      <span class="brand-sub">Sistema de Inventario</span>
+    </div>
+    <button class="btn-sidebar-toggle d-lg-none" id="sidebarClose">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <div class="sidebar-section-label">Principal</div>
+  <ul class="sidebar-nav">
+    <li><a href="#" class="nav-link active" data-page="dashboard">
+      <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+    </a></li>
+  </ul>
+
+  <div class="sidebar-section-label">Inventario</div>
+  <ul class="sidebar-nav">
+    <li><a href="#" class="nav-link" data-page="activos">
+      <i class="fa-solid fa-laptop"></i><span>Activos</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="movimientos">
+      <i class="fa-solid fa-arrows-rotate"></i><span>Movimientos</span>
+    </a></li>
+  </ul>
+
+  <div class="sidebar-section-label">Configuración</div>
+  <ul class="sidebar-nav">
+    <li><a href="#" class="nav-link" data-page="categorias">
+      <i class="fa-solid fa-tags"></i><span>Categorías</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="ubicaciones">
+      <i class="fa-solid fa-map-marker-alt"></i><span>Ubicaciones</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="responsables">
+      <i class="fa-solid fa-users"></i><span>Responsables</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="usuarios">
+      <i class="fa-solid fa-user-gear"></i><span>Usuarios</span>
+    </a></li>
+  </ul>
+
+  <!-- Solo superadmin -->
+  <div class="sidebar-section-label" id="menuAdmin" style="display:none">Administración</div>
+  <ul class="sidebar-nav" id="menuAdminLinks" style="display:none">
+    <li><a href="#" class="nav-link" data-page="empresas">
+      <i class="fa-solid fa-building"></i><span>Empresas</span>
+    </a></li>
+  </ul>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" id="btnLogout">
+      <i class="fa-solid fa-right-from-bracket"></i><span>Cerrar sesión</span>
+    </button>
+  </div>
+</nav>
+<!-- ── /SIDEBAR ─────────────────────────────────────────────── -->
+
+<!-- ── CONTENIDO PRINCIPAL ───────────────────────────────────── -->
+<div id="mainWrapper">
+
+  <!-- Navbar top -->
+  <header id="topbar">
+    <button class="btn-menu-toggle" id="sidebarToggle">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="topbar-breadcrumb">
+      <span id="pageTitle">Dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip" id="userChip">
+        <div class="user-avatar" id="userAvatar">SA</div>
+        <div class="user-info">
+          <span class="user-name"  id="userName">Cargando...</span>
+          <span class="user-role"  id="userRole">—</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Área de páginas -->
+  <main id="pageContent">
+
+    <!-- ── DASHBOARD ── -->
+    <section id="page-dashboard" class="page-section">
+      <div class="page-header">
+        <h2><i class="fa-solid fa-gauge-high me-2 text-primary"></i>Dashboard</h2>
+        <p class="text-muted">Resumen general del inventario</p>
+      </div>
+
+      <div class="row g-4 mb-4" id="statsCards">
+        <div class="col-6 col-lg-3">
+          <div class="stat-card stat-blue">
+            <div class="stat-icon"><i class="fa-solid fa-laptop"></i></div>
+            <div class="stat-data">
+              <span class="stat-value" id="statTotal">—</span>
+              <span class="stat-label">Activos totales</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card stat-green">
+            <div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div>
+            <div class="stat-data">
+              <span class="stat-value" id="statEnUso">—</span>
+              <span class="stat-label">En uso</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card stat-yellow">
+            <div class="stat-icon"><i class="fa-solid fa-warehouse"></i></div>
+            <div class="stat-data">
+              <span class="stat-value" id="statDeposito">—</span>
+              <span class="stat-label">En depósito</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="stat-card stat-red">
+            <div class="stat-icon"><i class="fa-solid fa-tools"></i></div>
+            <div class="stat-data">
+              <span class="stat-value" id="statReparacion">—</span>
+              <span class="stat-label">En reparación</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card-panel">
+            <div class="panel-header">
+              <h5><i class="fa-solid fa-clock-rotate-left me-2"></i>Últimos movimientos</h5>
+            </div>
+            <div class="panel-body p-0">
+              <table id="tblUltMovs" class="table table-hover mb-0">
+                <thead><tr><th>Activo</th><th>Tipo</th><th>Responsable</th><th>Fecha</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card-panel h-100">
+            <div class="panel-header">
+              <h5><i class="fa-solid fa-chart-pie me-2"></i>Por estado</h5>
+            </div>
+            <div class="panel-body d-flex align-items-center justify-content-center">
+              <canvas id="chartEstados" style="max-height:220px"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ACTIVOS ── -->
+    <section id="page-activos" class="page-section d-none">
+      <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h2><i class="fa-solid fa-laptop me-2 text-primary"></i>Activos</h2>
+          <p class="text-muted">Gestión del inventario de equipos y muebles</p>
+        </div>
+        <button class="btn btn-primary" id="btnNuevoActivo">
+          <i class="fa-solid fa-plus me-1"></i>Nuevo activo
+        </button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="card-panel mb-3">
+        <div class="panel-body">
+          <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+              <input type="search" class="form-control" id="filtroActivoSearch" placeholder="Buscar código, descripción, serie…">
+            </div>
+            <div class="col-6 col-md-2">
+              <select class="form-select" id="filtroActivoCategoria"><option value="">Todas las categorías</option></select>
+            </div>
+            <div class="col-6 col-md-2">
+              <select class="form-select" id="filtroActivoEstado"><option value="">Todos los estados</option></select>
+            </div>
+            <div class="col-12 col-md-2">
+              <button class="btn btn-outline-secondary w-100" id="btnFiltrarActivos">
+                <i class="fa-solid fa-filter me-1"></i>Filtrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div class="panel-body p-0">
+          <table id="tblActivos" class="table table-hover align-middle mb-0 w-100">
+            <thead>
+              <tr>
+                <th>Código</th><th>Descripción</th><th>Categoría</th>
+                <th>Estado</th><th>Ubicación</th><th>Responsable</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CATEGORÍAS ── -->
+    <section id="page-categorias" class="page-section d-none">
+      <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h2><i class="fa-solid fa-tags me-2 text-primary"></i>Categorías</h2>
+          <p class="text-muted">Tipos de activos disponibles</p>
+        </div>
+        <button class="btn btn-primary" id="btnNuevaCategoria">
+          <i class="fa-solid fa-plus me-1"></i>Nueva categoría
+        </button>
+      </div>
+      <div class="card-panel">
+        <div class="panel-body p-0">
+          <table id="tblCategorias" class="table table-hover align-middle mb-0 w-100">
+            <thead><tr><th>Icono</th><th>Nombre</th><th>Descripción</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── UBICACIONES ── -->
+    <section id="page-ubicaciones" class="page-section d-none">
+      <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h2><i class="fa-solid fa-map-marker-alt me-2 text-primary"></i>Ubicaciones</h2>
+          <p class="text-muted">Lugares físicos donde se encuentran los activos</p>
+        </div>
+        <button class="btn btn-primary" id="btnNuevaUbicacion">
+          <i class="fa-solid fa-plus me-1"></i>Nueva ubicación
+        </button>
+      </div>
+      <div class="card-panel">
+        <div class="panel-body p-0">
+          <table id="tblUbicaciones" class="table table-hover align-middle mb-0 w-100">
+            <thead><tr><th>Nombre</th><th>Piso</th><th>Sector</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── RESPONSABLES ── -->
+    <section id="page-responsables" class="page-section d-none">
+      <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h2><i class="fa-solid fa-users me-2 text-primary"></i>Responsables</h2>
+          <p class="text-muted">Personas asignadas a los activos</p>
+        </div>
+        <button class="btn btn-primary" id="btnNuevoResponsable">
+          <i class="fa-solid fa-plus me-1"></i>Nuevo responsable
+        </button>
+      </div>
+      <div class="card-panel">
+        <div class="panel-body p-0">
+          <table id="tblResponsables" class="table table-hover align-middle mb-0 w-100">
+            <thead><tr><th>Nombre</th><th>Email</th><th>Departamento</th><th>Cargo</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── USUARIOS ── -->
+    <section id="page-usuarios" class="page-section d-none">
+      <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h2><i class="fa-solid fa-user-gear me-2 text-primary"></i>Usuarios</h2>
+          <p class="text-muted">Administración de accesos al sistema</p>
+        </div>
+        <button class="btn btn-primary" id="btnNuevoUsuario">
+          <i class="fa-solid fa-plus me-1"></i>Nuevo usuario
+        </button>
+      </div>
+      <div class="card-panel">
+        <div class="panel-body p-0">
+          <table id="tblUsuarios" class="table table-hover align-middle mb-0 w-100">
+            <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MOVIMIENTOS ── -->
+    <section id="page-movimientos" class="page-section d-none">
+      <div class="page-header">
+        <h2><i class="fa-solid fa-arrows-rotate me-2 text-primary"></i>Movimientos</h2>
+        <p class="text-muted">Historial de cambios de estado, ubicación y asignación</p>
+      </div>
+      <div class="card-panel">
+        <div class="panel-body p-0">
+          <table id="tblMovimientos" class="table table-hover align-middle mb-0 w-100">
+            <thead><tr><th>Activo</th><th>Tipo</th><th>Origen</th><th>Destino</th><th>Estado nuevo</th><th>Usuario</th><th>Fecha</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── EMPRESAS (superadmin) ── -->
+    <section id="page-empresas" class="page-section d-none">
+      <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h2><i class="fa-solid fa-building me-2 text-primary"></i>Empresas</h2>
+          <p class="text-muted">Gestión de tenants del sistema SaaS</p>
+        </div>
+        <button class="btn btn-primary" id="btnNuevaEmpresa">
+          <i class="fa-solid fa-plus me-1"></i>Nueva empresa
+        </button>
+      </div>
+      <div class="card-panel">
+        <div class="panel-body p-0">
+          <table id="tblEmpresas" class="table table-hover align-middle mb-0 w-100">
+            <thead><tr><th>Nombre</th><th>Email</th><th>CUIT</th><th>Plan</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<!-- ── /CONTENIDO ─────────────────────────────────────────────── -->
+
+<!-- ── MODAL GENÉRICO ──────────────────────────────────────────── -->
+<div class="modal fade" id="modalForm" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Formulario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnModalSave">
+          <i class="fa-solid fa-floppy-disk me-1"></i>Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<!-- App JS -->
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/modules/dashboard.js"></script>
+<script src="/js/modules/activos.js"></script>
+<script src="/js/modules/categorias.js"></script>
+<script src="/js/modules/ubicaciones.js"></script>
+<script src="/js/modules/responsables.js"></script>
+<script src="/js/modules/usuarios.js"></script>
+<script src="/js/modules/movimientos.js"></script>
+<script src="/js/modules/empresas.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

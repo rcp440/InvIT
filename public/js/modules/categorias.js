@@ -44,7 +44,7 @@ const Categorias = (() => {
         </div>
       </div>`;
 
-    const modal = new bootstrap.Modal(document.getElementById('modalForm'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm'));
     document.getElementById('btnModalSave').onclick = () => save(cat?.id, modal);
     modal.show();
   };

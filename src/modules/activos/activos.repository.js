@@ -62,11 +62,17 @@ const findById = async (id, tenantId) => {
 };
 
 const generarCodigo = async (tenantId, prefijo) => {
+    // Upsert atómico: evita race condition del COUNT(*)+1 bajo concurrencia.
+    // Si dos requests llegan simultáneamente, uno espera el lock de fila y obtiene n+2.
     const { rows } = await query(
-        `SELECT COUNT(*) + 1 AS siguiente FROM activos WHERE tenant_id = $1 AND codigo LIKE $2`,
-        [tenantId, `${prefijo}%`]
+        `INSERT INTO codigos_secuencia (tenant_id, prefijo, ultimo)
+         VALUES ($1, $2, 1)
+         ON CONFLICT (tenant_id, prefijo)
+         DO UPDATE SET ultimo = codigos_secuencia.ultimo + 1
+         RETURNING ultimo`,
+        [tenantId, prefijo]
     );
-    return `${prefijo}-${String(rows[0].siguiente).padStart(4, '0')}`;
+    return `${prefijo}-${String(rows[0].ultimo).padStart(4, '0')}`;
 };
 
 const create = async (datos, usuarioId) => {
@@ -94,10 +100,11 @@ const update = async (id, tenantId, campos, usuarioId) => {
     const permitidos = ['codigo', 'descripcion', 'categoria_id', 'marca', 'modelo',
                         'numero_serie', 'fecha_compra', 'valor_compra', 'estado_id',
                         'ubicacion_id', 'responsable_id', 'observaciones', 'foto_url', 'activo'];
-    const sets = [`updated_by = '${usuarioId}'`]; const params = []; let i = 1;
+    const sets = []; const params = []; let i = 1;
     for (const [k, v] of Object.entries(campos)) {
         if (permitidos.includes(k) && v !== undefined) { sets.push(`${k}=$${i}`); params.push(v); i++; }
     }
+    sets.push(`updated_by=$${i}`); params.push(usuarioId); i++;
     params.push(id, tenantId);
     const { rows } = await query(
         `UPDATE activos SET ${sets.join(',')} WHERE id=$${i} AND tenant_id=$${i + 1} RETURNING *`, params
@@ -118,8 +125,8 @@ const getEstadisticasTenant = async (tenantId) => {
     const { rows } = await query(
         `SELECT
             COUNT(*)                                    AS total,
-            COUNT(*) FILTER (WHERE activo = true)       AS activos,
-            COUNT(*) FILTER (WHERE activo = false)      AS dados_de_baja,
+            COUNT(*) FILTER (WHERE a.activo = true)      AS activos,
+            COUNT(*) FILTER (WHERE a.activo = false)    AS dados_de_baja,
             COUNT(*) FILTER (WHERE e.nombre = 'En uso') AS en_uso,
             COUNT(*) FILTER (WHERE e.nombre = 'En depósito') AS en_deposito,
             COUNT(*) FILTER (WHERE e.nombre = 'En reparación') AS en_reparacion,

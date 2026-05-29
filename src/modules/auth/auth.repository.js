@@ -60,9 +60,35 @@ const incrementarIntentosFallidos = async (id) => {
     );
 };
 
+const saveRefreshToken = async (id, hash, exp) => {
+    await query(
+        'UPDATE usuarios SET refresh_token_hash = $1, refresh_token_exp = $2 WHERE id = $3',
+        [hash, exp, id]
+    );
+};
+
+const findByRefreshToken = async (userId) => {
+    const { rows } = await query(
+        `SELECT refresh_token_hash, refresh_token_exp
+         FROM usuarios WHERE id = $1 AND activo = true`,
+        [userId]
+    );
+    return rows[0] || null;
+};
+
+const revokeRefreshToken = async (id) => {
+    await query(
+        'UPDATE usuarios SET refresh_token_hash = NULL, refresh_token_exp = NULL WHERE id = $1',
+        [id]
+    );
+};
+
 const updatePassword = async (id, passwordHash) => {
     await query(
-        'UPDATE usuarios SET password_hash = $1, token_reset = NULL, token_reset_exp = NULL WHERE id = $2',
+        `UPDATE usuarios
+         SET password_hash = $1, token_reset = NULL, token_reset_exp = NULL,
+             refresh_token_hash = NULL, refresh_token_exp = NULL
+         WHERE id = $2`,
         [passwordHash, id]
     );
 };
@@ -89,6 +115,9 @@ module.exports = {
     findById,
     updateUltimoAcceso,
     incrementarIntentosFallidos,
+    saveRefreshToken,
+    findByRefreshToken,
+    revokeRefreshToken,
     updatePassword,
     saveResetToken,
     findByResetToken,

@@ -59,7 +59,7 @@ const Usuarios = (() => {
     if (u) {
       document.getElementById('uRol').value = u.rol_nombre;
     }
-    const modal = new bootstrap.Modal(document.getElementById('modalForm'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm'));
     document.getElementById('btnModalSave').onclick = () => save(u?.id, modal);
     modal.show();
   };
@@ -95,7 +95,7 @@ const Usuarios = (() => {
         <label class="form-label fw-semibold">Nueva contraseña <span class="text-danger">*</span></label>
         <input type="password" class="form-control" id="newPwd" placeholder="Mínimo 8 caracteres">
       </div>`;
-    const modal = new bootstrap.Modal(document.getElementById('modalForm'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm'));
     document.getElementById('btnModalSave').onclick = async () => {
       const pwd = document.getElementById('newPwd').value;
       if (pwd.length < 8) { toast('warning', 'Mínimo 8 caracteres'); return; }

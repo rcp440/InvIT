@@ -47,7 +47,7 @@ const Responsables = (() => {
           <input type="text" class="form-control" id="rCargo" value="${p?.cargo || ''}">
         </div>
       </div>`;
-    const modal = new bootstrap.Modal(document.getElementById('modalForm'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm'));
     document.getElementById('btnModalSave').onclick = () => save(p?.id, modal);
     modal.show();
   };

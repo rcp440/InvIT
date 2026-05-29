@@ -11,9 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('userRole').textContent  = rolLabel(usuario.rol);
   document.getElementById('userAvatar').textContent = iniciales(usuario.nombre, usuario.apellido);
 
-  if (Auth.hasRole('superadmin')) {
+  if (Auth.hasRole('superadmin', 'admin_empresa')) {
     document.getElementById('menuAdmin').style.display      = '';
     document.getElementById('menuAdminLinks').style.display = '';
+  }
+  if (!Auth.hasRole('superadmin')) {
+    document.getElementById('linkEmpresas')?.closest('li')?.remove();
   }
 
   // ── Sidebar toggle (móvil) ─────────────────────────────────
@@ -48,6 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
     responsables:{ title: 'Responsables',  init: Responsables.init},
     usuarios:    { title: 'Usuarios',      init: Usuarios.init    },
     movimientos: { title: 'Movimientos',   init: Movimientos.init },
+    estados:     { title: 'Estados',       init: Estados.init     },
+    reportes:    { title: 'Reportes',      init: Reportes.init    },
+    auditoria:   { title: 'Auditoría',     init: Auditoria.init   },
     empresas:    { title: 'Empresas',      init: Empresas.init    },
   };
 
@@ -151,7 +157,6 @@ function makeTable(id, columns, data = []) {
       url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json',
     },
     pageLength: 15,
-    responsive: true,
     order: [],
   });
 }

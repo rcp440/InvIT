@@ -2,6 +2,7 @@ const repo       = require('./usuarios.repository');
 const authService = require('../auth/auth.service');
 const { query }  = require('../../config/database');
 const { parsePagination, buildMeta } = require('../../utils/pagination.helper');
+const { checkLimiteUsuarios } = require('../../utils/plan.helper');
 
 const listar = async (tenantId, queryParams) => {
     const { page, limit, offset, order, direction } = parsePagination(queryParams);
@@ -21,6 +22,8 @@ const obtener = async (id, tenantId) => {
 };
 
 const crear = async (tenantId, datos) => {
+    await checkLimiteUsuarios(tenantId);
+
     const { nombre, apellido, email, password, rolNombre } = datos;
 
     // Verificar que el rol exista y sea permitido para el tenant

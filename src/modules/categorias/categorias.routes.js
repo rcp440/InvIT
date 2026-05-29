@@ -13,12 +13,12 @@ router.get('/',    checkPermiso('categorias', 'leer'),   ctrl.listar);
 router.get('/:id', checkPermiso('categorias', 'leer'),   ctrl.obtener);
 
 router.post('/', onlyAdmins,
-    [body('nombre').trim().notEmpty().withMessage('Nombre requerido'), validate],
+    [body('nombre').trim().notEmpty().isLength({ max: 100 }).withMessage('Nombre requerido (máx. 100 caracteres)'), validate],
     ctrl.crear
 );
 
 router.put('/:id', onlyAdmins,
-    [body('nombre').optional().trim().notEmpty(), validate],
+    [body('nombre').optional().trim().notEmpty().isLength({ max: 100 }), validate],
     ctrl.actualizar
 );
 

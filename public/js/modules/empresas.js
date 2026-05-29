@@ -67,7 +67,7 @@ const Empresas = (() => {
         </div>` : ''}
       </div>`;
 
-    const modal = new bootstrap.Modal(document.getElementById('modalForm'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm'));
     document.getElementById('btnModalSave').onclick = () => save(e?.id, modal);
     modal.show();
   };

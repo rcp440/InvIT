@@ -13,15 +13,15 @@ router.get('/',    checkPermiso('responsables', 'leer'), ctrl.listar);
 router.get('/:id', checkPermiso('responsables', 'leer'), ctrl.obtener);
 router.post('/', checkPermiso('responsables', 'crear'),
     [
-        body('nombre').trim().notEmpty().withMessage('Nombre requerido'),
-        body('apellido').trim().notEmpty().withMessage('Apellido requerido'),
-        body('email').optional().isEmail().normalizeEmail(),
+        body('nombre').trim().notEmpty().isLength({ max: 100 }).withMessage('Nombre requerido (máx. 100 caracteres)'),
+        body('apellido').trim().notEmpty().isLength({ max: 100 }).withMessage('Apellido requerido (máx. 100 caracteres)'),
+        body('email').optional().isEmail().normalizeEmail().isLength({ max: 150 }),
         validate,
     ],
     ctrl.crear
 );
 router.put('/:id', checkPermiso('responsables', 'editar'),
-    [body('nombre').optional().trim().notEmpty(), body('apellido').optional().trim().notEmpty(), validate],
+    [body('nombre').optional().trim().notEmpty().isLength({ max: 100 }), body('apellido').optional().trim().notEmpty().isLength({ max: 100 }), validate],
     ctrl.actualizar
 );
 router.delete('/:id', onlyAdmins, ctrl.eliminar);

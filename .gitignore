@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 
-# Environment
+# Environment (archivos *.example se commitean como plantillas)
 .env
 .env.local
 .env.production

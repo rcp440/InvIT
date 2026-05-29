@@ -1,4 +1,5 @@
-require('dotenv').config();
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+require('dotenv').config({ path: envFile });
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
@@ -12,9 +13,17 @@ const pool = new Pool({
     ssl:      process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
+// ID fijo para el advisory lock — identifica este sistema en PG
+const MIGRATION_LOCK_ID = 7_391_820;
+
 async function runMigrations() {
     const client = await pool.connect();
     try {
+        // Lock exclusivo a nivel de sesión: solo una instancia migra a la vez.
+        // Si otra instancia ya tiene el lock (deploy concurrente), esta espera.
+        await client.query('SELECT pg_advisory_lock($1)', [MIGRATION_LOCK_ID]);
+        console.log('[LOCK]  Advisory lock adquirido');
+
         // Tabla de control de migraciones ejecutadas
         await client.query(`
             CREATE TABLE IF NOT EXISTS _migraciones (
@@ -58,6 +67,8 @@ async function runMigrations() {
         console.error('[ERROR] Migración fallida:', err.message);
         process.exit(1);
     } finally {
+        // Liberar el lock siempre, incluso si hubo error
+        await client.query('SELECT pg_advisory_unlock($1)', [MIGRATION_LOCK_ID]).catch(() => {});
         client.release();
         await pool.end();
     }

@@ -1,6 +1,7 @@
-require('dotenv').config();
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+require('dotenv').config({ path: envFile });
 const { Pool } = require('pg');
-const fs = require('fs');
+const fs   = require('fs');
 const path = require('path');
 
 const pool = new Pool({
@@ -17,13 +18,18 @@ async function runSeeds() {
     try {
         const seedsDir = path.join(__dirname, 'seeds');
         const files = fs.readdirSync(seedsDir)
-            .filter(f => f.endsWith('.sql'))
+            .filter(f => f.endsWith('.sql') || f.endsWith('.js'))
             .sort();
 
         for (const file of files) {
-            const sql = fs.readFileSync(path.join(seedsDir, file), 'utf8');
             await client.query('BEGIN');
-            await client.query(sql);
+            if (file.endsWith('.js')) {
+                const seedFn = require(path.join(seedsDir, file));
+                await seedFn(client);
+            } else {
+                const sql = fs.readFileSync(path.join(seedsDir, file), 'utf8');
+                await client.query(sql);
+            }
             await client.query('COMMIT');
             console.log(`[OK]    ${file}`);
         }

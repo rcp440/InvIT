@@ -1,4 +1,5 @@
-const { query } = require('../config/database');
+const { query }  = require('../config/database');
+const logger     = require('./logger');
 
 /**
  * Registra una entrada en la tabla de auditoría.
@@ -36,8 +37,7 @@ const registrarAuditoria = async ({
             ]
         );
     } catch (err) {
-        // Log silencioso: la auditoría no debe romper la operación
-        console.error('[Auditoría] Error al registrar:', err.message);
+        logger.error({ message: 'Error al registrar auditoría', error: err.message, accion, modulo });
     }
 };
 

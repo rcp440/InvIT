@@ -1,4 +1,5 @@
 const service = require('./activos.service');
+const { importarDesdeCSV, plantillaCSV } = require('./activos.import');
 const { ok, created } = require('../../utils/response.helper');
 const { registrarAuditoria, getClientIP } = require('../../utils/audit.helper');
 
@@ -60,4 +61,28 @@ const estadisticas = async (req, res, next) => {
     catch (err) { next(err); }
 };
 
-module.exports = { listar, obtener, crear, actualizar, darDeBaja, estadisticas };
+const importar = async (req, res, next) => {
+    try {
+        if (!req.file) return res.status(422).json({ success: false, message: 'Archivo CSV requerido' });
+
+        const resultado = await importarDesdeCSV(req.file.buffer, req.tenantId, req.user.id);
+
+        await registrarAuditoria({
+            tenantId: req.tenantId, usuarioId: req.user.id, usuarioEmail: req.user.email,
+            accion: 'IMPORTAR', modulo: 'activos',
+            datosNuevos: { creados: resultado.creados, errores: resultado.errores.length },
+            ip: getClientIP(req),
+        });
+
+        const status = resultado.errores.length && !resultado.creados ? 422 : 200;
+        res.status(status).json({ success: status === 200, ...resultado });
+    } catch (err) { next(err); }
+};
+
+const plantilla = (req, res) => {
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="plantilla_activos.csv"');
+    res.send(plantillaCSV());
+};
+
+module.exports = { listar, obtener, crear, actualizar, darDeBaja, estadisticas, importar, plantilla };

@@ -23,11 +23,11 @@ router.get('/:id', checkPermiso('usuarios', 'leer'), controller.obtener);
 router.post('/',
     onlyAdmins,
     [
-        body('nombre').trim().notEmpty().withMessage('Nombre requerido'),
-        body('apellido').trim().notEmpty().withMessage('Apellido requerido'),
-        body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
+        body('nombre').trim().notEmpty().isLength({ max: 100 }).withMessage('Nombre requerido (máx. 100 caracteres)'),
+        body('apellido').trim().notEmpty().isLength({ max: 100 }).withMessage('Apellido requerido (máx. 100 caracteres)'),
+        body('email').isEmail().normalizeEmail().isLength({ max: 150 }).withMessage('Email inválido'),
         body('password')
-            .isLength({ min: 8 })
+            .isLength({ min: 8, max: 100 })
             .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
             .withMessage('Password: mínimo 8 caracteres, mayúsculas, minúsculas y números'),
         body('rolNombre')
@@ -42,9 +42,9 @@ router.post('/',
 router.put('/:id',
     onlyAdmins,
     [
-        body('nombre').optional().trim().notEmpty(),
-        body('apellido').optional().trim().notEmpty(),
-        body('email').optional().isEmail().normalizeEmail(),
+        body('nombre').optional().trim().notEmpty().isLength({ max: 100 }),
+        body('apellido').optional().trim().notEmpty().isLength({ max: 100 }),
+        body('email').optional().isEmail().normalizeEmail().isLength({ max: 150 }),
         body('activo').optional().isBoolean(),
         validate,
     ],
@@ -56,7 +56,7 @@ router.patch('/:id/password',
     onlyAdmins,
     [
         body('passwordNueva')
-            .isLength({ min: 8 })
+            .isLength({ min: 8, max: 100 })
             .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
             .withMessage('Password: mínimo 8 caracteres, mayúsculas, minúsculas y números'),
         validate,

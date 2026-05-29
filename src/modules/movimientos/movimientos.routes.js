@@ -18,7 +18,7 @@ router.post('/',
         body('tipo')
             .isIn(['asignacion','traslado','baja','reingreso','reparacion','devolucion','actualizacion'])
             .withMessage('Tipo de movimiento inválido'),
-        body('observaciones').optional().trim(),
+        body('observaciones').optional().trim().isLength({ max: 1000 }),
         validate,
     ],
     ctrl.registrar

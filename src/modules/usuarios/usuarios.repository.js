@@ -106,7 +106,7 @@ const softDelete = async (id, tenantId) => {
         params.push(tenantId);
     }
     const { rows } = await query(
-        `UPDATE usuarios SET activo = false WHERE id = $1 ${tenantFilter} RETURNING id`,
+        `UPDATE usuarios SET activo = false, deleted_at = NOW() WHERE id = $1 ${tenantFilter} RETURNING id`,
         params
     );
     return rows[0] || null;

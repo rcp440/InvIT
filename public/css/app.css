@@ -183,6 +183,11 @@ body {
 .stat-red    .stat-value { color: #be123c; }
 .stat-red    .stat-label { color: #fb7185; }
 
+.stat-purple { background: #f5f3ff; color: #6d28d9; }
+.stat-purple .stat-icon  { background: #8b5cf6; }
+.stat-purple .stat-value { color: #6d28d9; }
+.stat-purple .stat-label { color: #a78bfa; }
+
 /* ── CARD PANEL ────────────────────────────────────────────── */
 .card-panel {
   background: var(--panel-bg);

@@ -46,7 +46,7 @@ const update = async (id, tenantId, campos) => {
 
 const remove = async (id, tenantId) => {
     const { rows } = await query(
-        'UPDATE ubicaciones SET activo=false WHERE id=$1 AND tenant_id=$2 RETURNING id', [id, tenantId]
+        'UPDATE ubicaciones SET activo=false, deleted_at=NOW() WHERE id=$1 AND tenant_id=$2 RETURNING id', [id, tenantId]
     );
     return rows[0] || null;
 };

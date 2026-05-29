@@ -89,6 +89,31 @@
           <i class="fa-solid fa-right-to-bracket me-2" id="loginIcon"></i>Ingresar
         </button>
       </form>
+      <div class="text-center mt-3">
+        <a href="#" id="linkForgot" style="color:var(--accent);font-size:.85rem;text-decoration:none">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+
+      <!-- Formulario de recuperación (oculto) -->
+      <div id="forgotSection" class="d-none">
+        <hr>
+        <p class="text-muted small mb-3">Ingresá tu email y te enviaremos instrucciones para restablecer tu contraseña.</p>
+        <div id="alertForgot" class="d-none mb-3"></div>
+        <div class="form-floating mb-3">
+          <input type="email" class="form-control" id="forgotEmail" placeholder="email@empresa.com">
+          <label><i class="fa-regular fa-envelope me-1"></i>Email</label>
+        </div>
+        <button class="btn btn-login w-100 rounded-3" id="btnForgot">
+          <span id="forgotSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
+          <i class="fa-solid fa-paper-plane me-1"></i>Enviar instrucciones
+        </button>
+        <div class="text-center mt-3">
+          <a href="#" id="linkBackLogin" style="color:var(--accent);font-size:.85rem;text-decoration:none">
+            <i class="fa-solid fa-arrow-left me-1"></i>Volver al inicio de sesión
+          </a>
+        </div>
+      </div>
     </div>
     <div class="login-footer">© 2024 InventarioIT SaaS · Todos los derechos reservados</div>
   </div>
@@ -109,6 +134,50 @@
       msg.textContent = text;
       alert.classList.remove('d-none');
     };
+
+    // Toggle forgot password
+    const loginSection  = document.getElementById('loginForm');
+    const forgotSection = document.getElementById('forgotSection');
+    const linkForgot    = document.getElementById('linkForgot');
+    const linkBack      = document.getElementById('linkBackLogin');
+
+    linkForgot.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginSection.classList.add('d-none');
+      linkForgot.classList.add('d-none');
+      forgotSection.classList.remove('d-none');
+      alert.classList.add('d-none');
+    });
+    linkBack.addEventListener('click', (e) => {
+      e.preventDefault();
+      forgotSection.classList.add('d-none');
+      loginSection.classList.remove('d-none');
+      linkForgot.classList.remove('d-none');
+    });
+
+    document.getElementById('btnForgot').addEventListener('click', async () => {
+      const email  = document.getElementById('forgotEmail').value.trim();
+      const alertF = document.getElementById('alertForgot');
+      const spinF  = document.getElementById('forgotSpinner');
+      const btnF   = document.getElementById('btnForgot');
+      alertF.className = 'd-none';
+      if (!email) { alertF.className = 'alert alert-warning'; alertF.textContent = 'Ingresá tu email.'; return; }
+      btnF.disabled = true; spinF.classList.remove('d-none');
+      try {
+        await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        alertF.className = 'alert alert-success';
+        alertF.textContent = 'Si el email existe, recibirás instrucciones para restablecer tu contraseña.';
+      } catch {
+        alertF.className = 'alert alert-danger';
+        alertF.textContent = 'Error al enviar. Intente nuevamente.';
+      } finally {
+        btnF.disabled = false; spinF.classList.add('d-none');
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

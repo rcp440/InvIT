@@ -23,14 +23,21 @@ const resolveTenant = async (req, res, next) => {
             const headerTenantId = req.headers['x-tenant-id'];
 
             if (headerTenantId) {
-                // Verificar que el tenant exista y esté activo
+                // Verificar que el tenant exista y esté operativo
+                // Misma restricción que para usuarios regulares: bloquear suspendido e inactivo
                 const { rows } = await query(
-                    `SELECT id FROM empresas WHERE id = $1 AND estado != 'inactivo'`,
+                    `SELECT id, estado FROM empresas WHERE id = $1`,
                     [headerTenantId]
                 );
 
                 if (!rows.length) {
+                    return notFound(res, 'Empresa no encontrada');
+                }
+                if (rows[0].estado === 'inactivo') {
                     return notFound(res, 'Empresa no encontrada o inactiva');
+                }
+                if (rows[0].estado === 'suspendido') {
+                    return forbidden(res, 'Empresa suspendida');
                 }
 
                 req.tenantId    = headerTenantId;

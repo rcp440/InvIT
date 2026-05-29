@@ -11,13 +11,17 @@
     "seed": "node database/seed.js",
     "migrate:seed": "node database/migrate.js && node database/seed.js",
     "setup": "node database/create_db.js && node database/migrate.js && node database/seed.js",
-    "superadmin:reset": "node database/reset_superadmin.js"
+    "superadmin:reset": "node database/reset_superadmin.js",
+    "demo": "node database/demo.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
+    "connect-timeout": "^1.9.1",
     "cors": "^2.8.5",
+    "csv-parse": "^6.2.1",
     "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
     "express": "^4.19.2",
     "express-rate-limit": "^7.3.1",
     "express-validator": "^7.1.0",
@@ -25,6 +29,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^8.0.10",
     "pg": "^8.12.0",
     "pg-pool": "^3.6.2",
     "uuid": "^10.0.0",

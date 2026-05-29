@@ -40,7 +40,7 @@ const Ubicaciones = (() => {
           <input type="text" class="form-control" id="ubDesc" value="${u?.descripcion || ''}">
         </div>
       </div>`;
-    const modal = new bootstrap.Modal(document.getElementById('modalForm'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm'));
     document.getElementById('btnModalSave').onclick = () => save(u?.id, modal);
     modal.show();
   };

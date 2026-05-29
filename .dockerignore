@@ -1,0 +1,14 @@
+node_modules
+.env
+.env.*
+logs/
+uploads/
+*.log
+.git
+.gitignore
+README.md
+docker-compose*.yml
+Dockerfile
+database/demo.js
+database/check_superadmin.js
+database/reset_superadmin.js

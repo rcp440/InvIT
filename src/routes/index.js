@@ -8,17 +8,22 @@ const ubicacionesRoutes  = require('../modules/ubicaciones/ubicaciones.routes');
 const responsablesRoutes = require('../modules/responsables/responsables.routes');
 const activosRoutes      = require('../modules/activos/activos.routes');
 const movimientosRoutes  = require('../modules/movimientos/movimientos.routes');
+const reportesRoutes     = require('../modules/reportes/reportes.routes');
+const auditoriaRoutes    = require('../modules/auditoria/auditoria.routes');
+const dashboardRoutes    = require('../modules/dashboard/dashboard.routes');
+const estadosRoutes      = require('../modules/estados/estados.routes');
 
 const router = Router();
 
 // Health check
 router.get('/health', (req, res) => {
     res.json({
-        success:  true,
-        message:  'API funcionando',
-        version:  '1.0.0',
+        success:   true,
+        message:   'API funcionando',
+        version:   process.env.npm_package_version || '1.0.0',
+        apiVersion: 'v1',
         timestamp: new Date().toISOString(),
-        env:      process.env.NODE_ENV || 'development',
+        env:       process.env.NODE_ENV || 'development',
     });
 });
 
@@ -31,6 +36,10 @@ router.use('/ubicaciones',  ubicacionesRoutes);
 router.use('/responsables', responsablesRoutes);
 router.use('/activos',      activosRoutes);
 router.use('/movimientos',  movimientosRoutes);
+router.use('/reportes',     reportesRoutes);
+router.use('/auditoria',    auditoriaRoutes);
+router.use('/dashboard',    dashboardRoutes);
+router.use('/estados',      estadosRoutes);
 
 // 404 para rutas API no encontradas
 router.use((req, res) => {

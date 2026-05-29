@@ -5,12 +5,14 @@ const Activos = (() => {
     await loadSelectData();
     await load();
     fillFiltros();
-    document.getElementById('btnNuevoActivo').onclick   = () => openModal();
-    document.getElementById('btnFiltrarActivos').onclick = () => load();
+    document.getElementById('btnNuevoActivo').onclick      = () => openModal();
+    document.getElementById('btnFiltrarActivos').onclick   = () => load();
+    document.getElementById('btnImportarActivos').onclick  = () => importar();
+    document.getElementById('btnDescargarPlantilla').onclick = () => descargarPlantilla();
   };
 
   const loadSelectData = async () => {
-    const [rCat, rEst, rUbic, rResp] = await Promise.all([
+    const [rCat, rUbic, rResp] = await Promise.all([
       API.getPaged('/categorias',  { limit: 100, activo: true }),
       API.getPaged('/ubicaciones', { limit: 100, activo: true }),
       API.getPaged('/responsables',{ limit: 100, activo: true }),
@@ -125,33 +127,41 @@ const Activos = (() => {
         </div>
       </div>`;
 
-    const modal = new bootstrap.Modal(document.getElementById('modalForm'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm'));
     document.getElementById('btnModalSave').onclick = () => save(a?.id, modal);
     modal.show();
   };
 
   const save = async (id, modal) => {
-    const body = {
-      codigo:        document.getElementById('aCodigo').value.trim()    || undefined,
-      descripcion:   document.getElementById('aDesc').value.trim(),
-      categoriaId:   document.getElementById('aCategoria').value        || undefined,
-      marca:         document.getElementById('aMarca').value.trim()     || undefined,
-      modelo:        document.getElementById('aModelo').value.trim()    || undefined,
-      numeroSerie:   document.getElementById('aSerie').value.trim()     || undefined,
-      fechaCompra:   document.getElementById('aFecha').value            || undefined,
-      valorCompra:   parseFloat(document.getElementById('aValor').value)|| undefined,
-      ubicacionId:   document.getElementById('aUbicacion').value        || undefined,
-      responsableId: document.getElementById('aResponsable').value      || undefined,
-      observaciones: document.getElementById('aObs').value.trim()       || undefined,
-      prefijoCategoria: categorias.find(c => c.id == document.getElementById('aCategoria').value)?.nombre?.substring(0,3).toUpperCase() || 'ACT',
-    };
+    try {
+      const val = (elemId) => document.getElementById(elemId);
+      const body = {
+        codigo:        val('aCodigo').value.trim()    || undefined,
+        descripcion:   val('aDesc').value.trim(),
+        categoriaId:   val('aCategoria').value        || undefined,
+        marca:         val('aMarca').value.trim()     || undefined,
+        modelo:        val('aModelo').value.trim()    || undefined,
+        numeroSerie:   val('aSerie').value.trim()     || undefined,
+        fechaCompra:   val('aFecha').value            || undefined,
+        valorCompra:   parseFloat(val('aValor').value) || undefined,
+        ubicacionId:   val('aUbicacion').value        || undefined,
+        responsableId: val('aResponsable').value      || undefined,
+        observaciones: val('aObs').value.trim()       || undefined,
+        prefijoCategoria: categorias.find(c => c.id == val('aCategoria').value)?.nombre?.substring(0,3).toUpperCase() || 'ACT',
+      };
 
-    if (!body.descripcion) { toast('warning', 'La descripción es obligatoria'); return; }
+      if (!body.descripcion) { toast('warning', 'La descripción es obligatoria'); return; }
 
-    const r = id ? await API.put(`/activos/${id}`, body) : await API.post('/activos', body);
-    if (!r?.success) { toast('error', r?.message || 'Error al guardar'); return; }
-    toast('success', id ? 'Activo actualizado' : 'Activo creado');
-    modal.hide(); await load();
+      const r = id ? await API.put(`/activos/${id}`, body) : await API.post('/activos', body);
+      if (!r?.success) { toast('error', r?.message || 'Error al guardar'); return; }
+      toast('success', id ? 'Activo actualizado' : 'Activo creado');
+      modal.hide();
+      await new Promise(r => setTimeout(r, 350));
+      await load();
+    } catch (e) {
+      console.error('Error en save activo:', e);
+      toast('error', 'Error inesperado: ' + e.message);
+    }
   };
 
   const ver = async (id) => {
@@ -176,7 +186,7 @@ const Activos = (() => {
         ${a.observaciones ? `<div class="col-12"><strong>Observaciones:</strong> ${a.observaciones}</div>` : ''}
       </div>`;
     document.getElementById('btnModalSave').style.display = 'none';
-    const modal = new bootstrap.Modal(document.getElementById('modalForm'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm'));
     modal._element.addEventListener('hidden.bs.modal', () => {
       document.getElementById('btnModalSave').style.display = '';
     }, { once: true });
@@ -201,6 +211,72 @@ const Activos = (() => {
     const r = await API.patch(`/activos/${id}/baja`, { motivo });
     if (r?.success) { toast('success', 'Activo dado de baja'); await load(); }
     else toast('error', r?.message || 'Error');
+  };
+
+  const importar = () => {
+    document.getElementById('modalTitle').textContent = 'Importar activos desde CSV';
+    document.getElementById('modalBody').innerHTML = `
+      <p class="text-muted mb-3">Seleccioná un archivo CSV con el formato de la plantilla para crear activos masivamente.</p>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Archivo CSV <span class="text-danger">*</span></label>
+        <input type="file" class="form-control" id="importFile" accept=".csv">
+      </div>
+      <div id="importResult" class="d-none"></div>`;
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalForm'));
+    const saveBtn = document.getElementById('btnModalSave');
+    saveBtn.innerHTML = '<i class="fa-solid fa-upload me-1"></i>Importar';
+    saveBtn.onclick = () => doImport(modal);
+    modal._element.addEventListener('hidden.bs.modal', () => {
+      saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar';
+    }, { once: true });
+    modal.show();
+  };
+
+  const doImport = async (modal) => {
+    const file = document.getElementById('importFile')?.files[0];
+    if (!file) { toast('warning', 'Seleccioná un archivo CSV'); return; }
+    const formData = new FormData();
+    formData.append('archivo', file);
+    const btn = document.getElementById('btnModalSave');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Importando...';
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch('/api/activos/importar', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const r = await res.json();
+      const div = document.getElementById('importResult');
+      if (r?.success) {
+        const d = r.data;
+        div.className = 'alert alert-success mt-2';
+        div.innerHTML = `<strong>Importación completada</strong><br>
+          Procesados: ${d.total} &nbsp;|&nbsp; Creados: <strong>${d.creados}</strong> &nbsp;|&nbsp; Errores: ${d.errores?.length || 0}
+          ${d.errores?.length ? `<hr class="my-2"><small>${d.errores.slice(0, 5).map(e => `Fila ${e.fila}: ${e.error}`).join('<br>')}</small>` : ''}`;
+        div.classList.remove('d-none');
+        if (d.creados > 0) await load();
+      } else {
+        div.className = 'alert alert-danger mt-2';
+        div.innerHTML = r?.message || 'Error al importar';
+        div.classList.remove('d-none');
+      }
+    } catch { toast('error', 'Error al importar'); }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-upload me-1"></i>Importar';
+    }
+  };
+
+  const descargarPlantilla = async () => {
+    const token = localStorage.getItem('accessToken');
+    const resp = await fetch('/api/activos/importar/plantilla', { headers: { Authorization: `Bearer ${token}` } });
+    if (!resp.ok) { toast('error', 'Error al descargar plantilla'); return; }
+    const blob = await resp.blob();
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'plantilla_activos.csv' });
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(a.href);
   };
 
   return { init, editar, ver, baja };

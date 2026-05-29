@@ -24,13 +24,13 @@ router.get('/:id/estadisticas', authenticate, resolveTenant, controller.estadist
 router.post('/',
     onlySuperAdmin,
     [
-        body('nombre').trim().notEmpty().withMessage('Nombre requerido'),
+        body('nombre').trim().notEmpty().isLength({ max: 200 }).withMessage('Nombre requerido (máx. 200 caracteres)'),
         body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
         body('adminEmail').isEmail().normalizeEmail().withMessage('Email del administrador inválido'),
-        body('adminNombre').trim().notEmpty().withMessage('Nombre del administrador requerido'),
-        body('adminApellido').trim().notEmpty().withMessage('Apellido del administrador requerido'),
+        body('adminNombre').trim().notEmpty().isLength({ max: 100 }).withMessage('Nombre del administrador requerido (máx. 100 caracteres)'),
+        body('adminApellido').trim().notEmpty().isLength({ max: 100 }).withMessage('Apellido del administrador requerido (máx. 100 caracteres)'),
         body('adminPassword')
-            .isLength({ min: 8 })
+            .isLength({ min: 8, max: 100 })
             .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
             .withMessage('Password del admin: mínimo 8 caracteres, mayúsculas, minúsculas y números'),
         validate,
@@ -42,7 +42,7 @@ router.post('/',
 router.put('/:id',
     onlyAdmins,
     [
-        body('nombre').optional().trim().notEmpty().withMessage('Nombre no puede estar vacío'),
+        body('nombre').optional().trim().notEmpty().isLength({ max: 200 }).withMessage('Nombre no puede estar vacío (máx. 200 caracteres)'),
         body('email').optional().isEmail().normalizeEmail(),
         validate,
     ],

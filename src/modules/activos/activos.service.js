@@ -1,6 +1,7 @@
 const repo    = require('./activos.repository');
 const movsRepo = require('../movimientos/movimientos.repository');
 const { parsePagination, buildMeta } = require('../../utils/pagination.helper');
+const { checkLimiteActivos } = require('../../utils/plan.helper');
 
 const listar = async (tenantId, q) => {
     const { page, limit, offset, order, direction } = parsePagination(q);
@@ -24,6 +25,8 @@ const obtener = async (id, tenantId) => {
 };
 
 const crear = async (tenantId, datos, usuarioId) => {
+    await checkLimiteActivos(tenantId);
+
     // Generar código automático si no se provee
     if (!datos.codigo) {
         const prefijo = datos.prefijoCategoria || 'ACT';

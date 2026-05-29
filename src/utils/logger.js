@@ -7,20 +7,29 @@ if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir, { recursive: true });
 }
 
-const { combine, timestamp, printf, colorize, errors } = winston.format;
+const isProd = process.env.NODE_ENV === 'production';
+const { combine, timestamp, printf, colorize, errors, json } = winston.format;
 
-const logFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
+// Formato legible para desarrollo
+const devFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
     const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
     return `${timestamp} [${level}]: ${stack || message}${metaStr}`;
 });
 
+// JSON estructurado para producción (compatible con Datadog, Elasticsearch, etc.)
+const prodFormat = combine(
+    errors({ stack: true }),
+    timestamp(),
+    json()
+);
+
+const fileFormat = isProd
+    ? prodFormat
+    : combine(errors({ stack: true }), timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), devFormat);
+
 const logger = winston.createLogger({
     level: process.env.LOG_LEVEL || 'info',
-    format: combine(
-        errors({ stack: true }),
-        timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        logFormat
-    ),
+    format: fileFormat,
     transports: [
         new winston.transports.File({
             filename: path.join(logDir, 'error.log'),
@@ -36,10 +45,15 @@ const logger = winston.createLogger({
     ],
 });
 
-if (process.env.NODE_ENV !== 'production') {
+if (!isProd) {
     logger.add(new winston.transports.Console({
-        format: combine(colorize(), timestamp({ format: 'HH:mm:ss' }), logFormat),
+        format: combine(colorize(), timestamp({ format: 'HH:mm:ss' }), devFormat),
     }));
 }
+
+// Stream para Morgan — redirige logs HTTP a Winston en lugar de stdout
+logger.morganStream = {
+    write: (message) => logger.http(message.trim()),
+};
 
 module.exports = logger;

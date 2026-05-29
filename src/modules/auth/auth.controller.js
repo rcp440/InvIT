@@ -100,6 +100,9 @@ const cambiarPassword = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
     try {
+        // Revocar el refresh token en DB para invalidar la sesión completamente
+        await service.logout(req.user.id);
+
         await registrarAuditoria({
             tenantId:    req.user?.tenant_id,
             usuarioId:   req.user?.id,
@@ -115,4 +118,31 @@ const logout = async (req, res, next) => {
     }
 };
 
-module.exports = { login, refresh, me, cambiarPassword, logout };
+const forgotPassword = async (req, res, next) => {
+    try {
+        await service.forgotPassword(req.body.email);
+        // Siempre 200 aunque el email no exista (evita user enumeration)
+        ok(res, null, 'Si el email existe, recibirás un enlace para restablecer tu contraseña');
+    } catch (err) {
+        next(err);
+    }
+};
+
+const resetPassword = async (req, res, next) => {
+    try {
+        const { token, passwordNueva } = req.body;
+        await service.resetPassword(token, passwordNueva);
+
+        await registrarAuditoria({
+            accion:  'RESET_PASSWORD',
+            modulo:  'auth',
+            ip:      getClientIP(req),
+        });
+
+        ok(res, null, 'Password restablecida correctamente');
+    } catch (err) {
+        next(err);
+    }
+};
+
+module.exports = { login, refresh, me, cambiarPassword, logout, forgotPassword, resetPassword };

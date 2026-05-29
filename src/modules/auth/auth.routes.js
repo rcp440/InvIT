@@ -10,7 +10,7 @@ const router = Router();
 router.post('/login',
     [
         body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
-        body('password').notEmpty().withMessage('Password requerida'),
+        body('password').notEmpty().isLength({ max: 100 }).withMessage('Password requerida'),
         validate,
     ],
     controller.login
@@ -35,9 +35,9 @@ router.get('/me',
 router.post('/cambiar-password',
     authenticate,
     [
-        body('passwordActual').notEmpty().withMessage('Password actual requerida'),
+        body('passwordActual').notEmpty().isLength({ max: 100 }).withMessage('Password actual requerida'),
         body('passwordNueva')
-            .isLength({ min: 8 }).withMessage('La nueva password debe tener al menos 8 caracteres')
+            .isLength({ min: 8, max: 100 }).withMessage('La nueva password debe tener al menos 8 caracteres')
             .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
             .withMessage('La password debe contener mayúsculas, minúsculas y números'),
         validate,
@@ -49,6 +49,28 @@ router.post('/cambiar-password',
 router.post('/logout',
     authenticate,
     controller.logout
+);
+
+// POST /api/auth/forgot-password  (público)
+router.post('/forgot-password',
+    [
+        body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
+        validate,
+    ],
+    controller.forgotPassword
+);
+
+// POST /api/auth/reset-password  (público, requiere token del email)
+router.post('/reset-password',
+    [
+        body('token').notEmpty().withMessage('Token requerido'),
+        body('passwordNueva')
+            .isLength({ min: 8, max: 100 })
+            .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+            .withMessage('La password debe tener al menos 8 caracteres, mayúsculas, minúsculas y números'),
+        validate,
+    ],
+    controller.resetPassword
 );
 
 module.exports = router;

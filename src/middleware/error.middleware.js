@@ -7,12 +7,13 @@ const logger = require('../utils/logger');
 const errorMiddleware = (err, req, res, next) => {
     // Log del error completo para debugging
     logger.error({
-        message:  err.message,
-        stack:    process.env.NODE_ENV === 'development' ? err.stack : undefined,
-        method:   req.method,
-        path:     req.path,
-        tenantId: req.tenantId,
-        userId:   req.user?.id,
+        message:   err.message,
+        stack:     process.env.NODE_ENV === 'development' ? err.stack : undefined,
+        requestId: req.requestId,
+        method:    req.method,
+        path:      req.path,
+        tenantId:  req.tenantId,
+        userId:    req.user?.id,
     });
 
     // Errores de validación (express-validator)
@@ -53,10 +54,13 @@ const errorMiddleware = (err, req, res, next) => {
 
     // HTTP status customizado
     const status = err.status || err.statusCode || 500;
+    const isServerError = status >= 500;
 
     res.status(status).json({
         success: false,
-        message: err.message || 'Error interno del servidor',
+        message: (isServerError && process.env.NODE_ENV === 'production')
+            ? 'Error interno del servidor'
+            : (err.message || 'Error interno del servidor'),
         ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     });
 };

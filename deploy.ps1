@@ -40,6 +40,7 @@ $files = @(
     "public/js/modules/estados.js",
     "public/js/modules/reportes.js",
     "public/js/modules/auditoria.js",
+    "public/reset-password.html",
     "src/modules/activos/activos.import.js",
     "src/modules/activos/activos.controller.js",
     "src/modules/activos/activos.routes.js",
@@ -95,3 +96,5 @@ ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no $server `
 
 Write-Host ""
 Write-Host "Deploy completado!" -ForegroundColor Green
+Write-Host ""
+Read-Host "Presioná Enter para cerrar"

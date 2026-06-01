@@ -12,17 +12,16 @@ const Activos = (() => {
   };
 
   const loadSelectData = async () => {
-    const [rCat, rUbic, rResp] = await Promise.all([
+    const [rCat, rUbic, rResp, rEst] = await Promise.all([
       API.getPaged('/categorias',  { limit: 100, activo: true }),
       API.getPaged('/ubicaciones', { limit: 100, activo: true }),
       API.getPaged('/responsables',{ limit: 100, activo: true }),
+      API.getPaged('/estados',     { limit: 100 }),
     ]);
     categorias   = rCat?.data  || [];
     ubicaciones  = rUbic?.data || [];
     responsables = rResp?.data || [];
-
-    // Obtener estados globales desde la API de movimientos (workaround: usamos los del activo)
-    // Los estados vienen incluidos en el listado de activos
+    estados      = rEst?.data  || [];
   };
 
   const fillFiltros = () => {
@@ -37,6 +36,7 @@ const Activos = (() => {
       });
     };
     sel('filtroActivoCategoria', categorias);
+    sel('filtroActivoEstado',    estados);
   };
 
   const load = async () => {
